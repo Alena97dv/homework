@@ -7,10 +7,11 @@
 
 ### Задание 1
 
-1. `Terraform Playbook.`
+## 1. Terraform конфигурация
 
+### provider.tf
 
-# provider.tf 
+```hcl
 terraform {
   required_providers {
     yandex = {
@@ -25,8 +26,11 @@ provider "yandex" {
   folder_id                = "b1goaqpvj6fkemm5q7kf"
   zone                     = "ru-central1-a"
 }
+```
 
-# network.tf 
+### network.tf
+
+```hcl
 resource "yandex_vpc_network" "net" {
   name = "hw-net"
 }
@@ -64,8 +68,11 @@ resource "yandex_vpc_security_group" "sg" {
     v4_cidr_blocks = ["0.0.0.0/0"]
   }
 }
+```
 
-# vm.tf 
+### vm.tf
+
+```hcl
 resource "yandex_compute_instance" "vm" {
   count = 2
 
@@ -80,13 +87,14 @@ resource "yandex_compute_instance" "vm" {
   }
 
   network_interface {
-    subnet_id = yandex_vpc_subnet.subnet1.id
-    nat       = true
+    subnet_id          = yandex_vpc_subnet.subnet1.id
+    nat                = true
+    security_group_ids = [yandex_vpc_security_group.sg.id]
   }
 
   resources {
-    cores  = 2
-    memory = 2
+    cores         = 2
+    memory        = 2
     core_fraction = 20
   }
 
@@ -104,9 +112,12 @@ resource "yandex_compute_instance" "vm" {
     EOF
   }
 }
+```
 
-# balancer.tf 
-'# -- Целевая группа --'
+### balancer.tf
+
+```hcl
+# --- Целевая группа ---
 resource "yandex_lb_target_group" "tg" {
   name = "hw-target-group"
 
@@ -121,7 +132,7 @@ resource "yandex_lb_target_group" "tg" {
   }
 }
 
-'# --- Сетевой балансировщик ---'
+# --- Сетевой балансировщик ---
 resource "yandex_lb_network_load_balancer" "lb" {
   name = "hw-balancer"
 
@@ -145,7 +156,23 @@ resource "yandex_lb_network_load_balancer" "lb" {
     }
   }
 }
+```
 
+## 2. Статус балансировщика и целевой группы
+
+![Статус балансировщика](images/balancer.png)
+
+![Статус целевой группы](images/target-group.png)
+
+## 3. Страница Nginx по IP балансировщика
+
+![Страница Nginx](images/nginx.png)
+
+## Результат
+
+- Балансировщик в статусе **Active**
+- Обе ВМ в целевой группе **Healthy**
+- По IP балансировщика открывается страница Nginx
 
 
 
