@@ -1,37 +1,159 @@
-# Домашнее задание к занятию "`Название занятия`" - `Фамилия и имя студента`
+# Домашнее задание к занятию "`Отказоустойчивость в облаке`" - `Павлова А.В`
 
 
-### Инструкция по выполнению домашнего задания
 
-   1. Сделайте `fork` данного репозитория к себе в Github и переименуйте его по названию или номеру занятия, например, https://github.com/имя-вашего-репозитория/git-hw или  https://github.com/имя-вашего-репозитория/7-1-ansible-hw).
-   2. Выполните клонирование данного репозитория к себе на ПК с помощью команды `git clone`.
-   3. Выполните домашнее задание и заполните у себя локально этот файл README.md:
-      - впишите вверху название занятия и вашу фамилию и имя
-      - в каждом задании добавьте решение в требуемом виде (текст/код/скриншоты/ссылка)
-      - для корректного добавления скриншотов воспользуйтесь [инструкцией "Как вставить скриншот в шаблон с решением](https://github.com/netology-code/sys-pattern-homework/blob/main/screen-instruction.md)
-      - при оформлении используйте возможности языка разметки md (коротко об этом можно посмотреть в [инструкции  по MarkDown](https://github.com/netology-code/sys-pattern-homework/blob/main/md-instruction.md))
-   4. После завершения работы над домашним заданием сделайте коммит (`git commit -m "comment"`) и отправьте его на Github (`git push origin`);
-   5. В личном кабинете прикрепите и отправьте ссылку на решение в виде md-файла в вашем Github.
-   6. Любые вопросы по выполнению заданий спрашивайте в разделе “Вопросы по заданию” в личном кабинете.
-   
-Желаем успехов в выполнении домашнего задания!
-   
-### Дополнительные материалы, которые могут быть полезны для выполнения задания
-
-1. [Руководство по оформлению Markdown файлов](https://gist.github.com/Jekins/2bf2d0638163f1294637#Code)
 
 ---
 
 ### Задание 1
 
-`Приведите ответ в свободной форме........`
+1. `Terraform Playbook.`
+========== provider.tf ==========
+terraform {
+  required_providers {
+    yandex = {
+      source = "yandex-cloud/yandex"
+    }
+  }
+}
 
-1. `Заполните здесь этапы выполнения, если требуется ....`
-2. `Заполните здесь этапы выполнения, если требуется ....`
+provider "yandex" {
+  service_account_key_file = "key.json"
+  cloud_id                 = "b1go2f99t4stvp2pl4u1"
+  folder_id                = "b1goaqpvj6fkemm5q7kf"
+  zone                     = "ru-central1-a"
+}
+
+========== network.tf ==========
+resource "yandex_vpc_network" "net" {
+  name = "hw-net"
+}
+
+resource "yandex_vpc_subnet" "subnet1" {
+  name           = "hw-subnet"
+  zone           = "ru-central1-a"
+  network_id     = yandex_vpc_network.net.id
+  v4_cidr_blocks = ["192.168.10.0/24"]
+}
+
+resource "yandex_vpc_security_group" "sg" {
+  name       = "hw-sg"
+  network_id = yandex_vpc_network.net.id
+
+  ingress {
+    protocol       = "TCP"
+    description    = "SSH"
+    port           = 22
+    v4_cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    protocol       = "TCP"
+    description    = "HTTP"
+    port           = 80
+    v4_cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    protocol       = "ANY"
+    description    = "All outbound"
+    from_port      = 0
+    to_port        = 65535
+    v4_cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+========== vm.tf ==========
+resource "yandex_compute_instance" "vm" {
+  count = 2
+
+  name        = "vm${count.index}"
+  platform_id = "standard-v1"
+
+  boot_disk {
+    initialize_params {
+      image_id = "fd83ergat2e815oohe7o" # Ubuntu 24.04
+      size     = 10
+    }
+  }
+
+  network_interface {
+    subnet_id = yandex_vpc_subnet.subnet1.id
+    nat       = true
+  }
+
+  resources {
+    cores  = 2
+    memory = 2
+    core_fraction = 20
+  }
+
+  metadata = {
+    ssh-keys  = "ubuntu:${file("~/.ssh/id_ed25519.pub")}"
+    user-data = <<-EOF
+      #cloud-config
+      package_update: true
+      packages:
+        - nginx
+      runcmd:
+        - systemctl enable nginx
+        - systemctl start nginx
+        - echo "Hello from VM ${count.index}" > /var/www/html/index.html
+    EOF
+  }
+}
+
+========== balancer.tf ==========
+# --- Целевая группа ---
+resource "yandex_lb_target_group" "tg" {
+  name = "hw-target-group"
+
+  target {
+    subnet_id = yandex_vpc_subnet.subnet1.id
+    address   = yandex_compute_instance.vm[0].network_interface.0.ip_address
+  }
+
+  target {
+    subnet_id = yandex_vpc_subnet.subnet1.id
+    address   = yandex_compute_instance.vm[1].network_interface.0.ip_address
+  }
+}
+
+# --- Сетевой балансировщик ---
+resource "yandex_lb_network_load_balancer" "lb" {
+  name = "hw-balancer"
+
+  listener {
+    name = "http-listener"
+    port = 80
+    external_address_spec {
+      ip_version = "ipv4"
+    }
+  }
+
+  attached_target_group {
+    target_group_id = yandex_lb_target_group.tg.id
+
+    healthcheck {
+      name = "http-healthcheck"
+      http_options {
+        port = 80
+        path = "/"
+      }
+    }
+  }
+}
+
+`Скриншоты`
+![Network.tf](![Network.tf](network.tf.png))
+![provider.tf]([provider.tf.png))
+
+2. 
 3. `Заполните здесь этапы выполнения, если требуется ....`
 4. `Заполните здесь этапы выполнения, если требуется ....`
 5. `Заполните здесь этапы выполнения, если требуется ....`
-6. 
+6. `Заполните здесь этапы выполнения, если требуется ....`
+7. 
 
 ```
 Поле для вставки кода...
