@@ -10,7 +10,7 @@
 1. `Terraform Playbook.`
 
 
-========== provider.tf ==========
+# provider.tf 
 terraform {
   required_providers {
     yandex = {
@@ -26,7 +26,7 @@ provider "yandex" {
   zone                     = "ru-central1-a"
 }
 
-========== network.tf ==========
+# network.tf 
 resource "yandex_vpc_network" "net" {
   name = "hw-net"
 }
@@ -65,7 +65,7 @@ resource "yandex_vpc_security_group" "sg" {
   }
 }
 
-========== vm.tf ==========
+# vm.tf 
 resource "yandex_compute_instance" "vm" {
   count = 2
 
@@ -105,8 +105,8 @@ resource "yandex_compute_instance" "vm" {
   }
 }
 
-========== balancer.tf ==========
-# -- Целевая группа --
+# balancer.tf 
+'# -- Целевая группа --'
 resource "yandex_lb_target_group" "tg" {
   name = "hw-target-group"
 
@@ -121,7 +121,7 @@ resource "yandex_lb_target_group" "tg" {
   }
 }
 
-# --- Сетевой балансировщик ---
+'# --- Сетевой балансировщик ---'
 resource "yandex_lb_network_load_balancer" "lb" {
   name = "hw-balancer"
 
@@ -149,8 +149,7 @@ resource "yandex_lb_network_load_balancer" "lb" {
 
 
 
-# Скриншоты
-
+# Скриншоты Terraform Playbook
 
 ![Network.tf](https://github.com/Alena97dv/homework/blob/main/network.tf.png)
 ![provider.tf](https://github.com/Alena97dv/homework/blob/main/provider.tf.png)
