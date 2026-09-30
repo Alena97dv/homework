@@ -7,7 +7,7 @@
 
 ### Задание 1
 
-1. ##`Terraform Playbook.`
+1. ###`Terraform Playbook.`
 
 
 ========== provider.tf ==========
@@ -152,11 +152,13 @@ resource "yandex_lb_network_load_balancer" "lb" {
 ###Скриншоты
 
 
-
 ![Network.tf](https://github.com/Alena97dv/homework/blob/main/network.tf.png)
 ![provider.tf](https://github.com/Alena97dv/homework/blob/main/provider.tf.png)
 ![vm.tf](https://github.com/Alena97dv/homework/blob/main/vm.tf.png)
 ![balancer.tf](https://github.com/Alena97dv/homework/blob/main/balancer.tf.png)
+
+
+
 2. 
 3. `Заполните здесь этапы выполнения, если требуется ....`
 4. `Заполните здесь этапы выполнения, если требуется ....`
