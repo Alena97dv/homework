@@ -106,7 +106,7 @@ resource "yandex_compute_instance" "vm" {
 }
 
 ========== balancer.tf ==========
-# --- Целевая группа ---
+# -- Целевая группа --
 resource "yandex_lb_target_group" "tg" {
   name = "hw-target-group"
 
@@ -149,7 +149,7 @@ resource "yandex_lb_network_load_balancer" "lb" {
 
 
 
-##Скриншоты
+###Скриншоты
 
 
 
