@@ -175,6 +175,16 @@ resource "yandex_lb_network_load_balancer" "lb" {
 
 ![Страница Nginx](https://github.com/Alena97dv/homework/blob/main/IP-адреса%20балансировщика.png)
 
+Проверка, что Nginx работает на каждой ВМ отдельно:
+
+**ВМ №1 (`vm0`):**
+
+![Nginx на vm0](https://github.com/Alena97dv/homework/blob/main/vm0.png)
+
+**ВМ №2 (`vm1`):**
+
+![Nginx на vm1](https://github.com/Alena97dv/homework/blob/main/vm1.png)
+
 
 
 
