@@ -145,8 +145,11 @@ resource "yandex_lb_network_load_balancer" "lb" {
 }
 
 `Скриншоты`
+
+
+
 ![Network.tf](https://github.com/Alena97dv/homework/blob/main/network.tf.png)
-![provider.tf]([provider.tf.png))
+![provider.tf]([[provider.tf.png)](https://github.com/Alena97dv/homework/blob/main/provider.tf.png))
 
 2. 
 3. `Заполните здесь этапы выполнения, если требуется ....`
